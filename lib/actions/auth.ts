@@ -40,7 +40,7 @@ export const signInWithCredentials = async (
 };
 
 export const signUp = async (params: AuthCredentials) => {
-  const { fullName, email, password, universityId, universityCard } = params;
+  const { fullName, email, universityId, password, universityCard } = params;
 
   const ip = (await headers()).get("x-forwarded-for") || "127.0.0.1";
   const { success } = await ratelimit.limit(ip);
@@ -63,13 +63,13 @@ export const signUp = async (params: AuthCredentials) => {
     await db.insert(users).values({
       fullName,
       email,
-      password: hashedPassword,
       universityId,
+      password: hashedPassword,
       universityCard,
     });
 
     await workflowClient.trigger({
-      url: `${config.env.prodApiEndpoint}/api/workflow/onboarding`,
+      url: `${config.env.prodApiEndpoint}/api/workflows/onboarding`,
       body: {
         email,
         fullName,
@@ -77,9 +77,10 @@ export const signUp = async (params: AuthCredentials) => {
     });
 
     await signInWithCredentials({ email, password });
+
     return { success: true };
   } catch (error) {
-    console.log(error);
+    console.log(error, "Signup error");
     return { success: false, error: "Signup error" };
   }
 };
